@@ -66,15 +66,14 @@ type s3Interface interface {
 }
 
 type ObjectStore struct {
-	log                       logrus.FieldLogger
-	s3                        s3Interface
-	preSignS3                 s3Interface
-	s3Uploader                *s3manager.Uploader
-	kmsKeyID                  string
-	signatureVersion          string
-	serverSideEncryption      string
-	customerEncryptionKeyFile string
-	customerEncryptionKey     []byte
+	log                   logrus.FieldLogger
+	s3                    s3Interface
+	preSignS3             s3Interface
+	s3Uploader            *s3manager.Uploader
+	kmsKeyID              string
+	signatureVersion      string
+	serverSideEncryption  string
+	customerEncryptionKey []byte
 }
 
 func newObjectStore(logger logrus.FieldLogger) *ObjectStore {
@@ -99,6 +98,7 @@ func (o *ObjectStore) Init(config map[string]string) error {
 		signatureVersionKey,
 		credentialProfileKey,
 		serverSideEncryptionKey,
+		customerEncryptionKeyFileKey,
 		insecureSkipTLSVerifyKey,
 	); err != nil {
 		return err
