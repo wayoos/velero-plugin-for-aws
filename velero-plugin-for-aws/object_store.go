@@ -17,8 +17,12 @@ limitations under the License.
 package main
 
 import (
+	"crypto/md5"
 	"crypto/tls"
+	"encoding/base64"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
@@ -40,16 +44,17 @@ import (
 )
 
 const (
-	s3URLKey                 = "s3Url"
-	publicURLKey             = "publicUrl"
-	kmsKeyIDKey              = "kmsKeyId"
-	s3ForcePathStyleKey      = "s3ForcePathStyle"
-	bucketKey                = "bucket"
-	signatureVersionKey      = "signatureVersion"
-	credentialProfileKey     = "profile"
-	serverSideEncryptionKey  = "serverSideEncryption"
-	insecureSkipTLSVerifyKey = "insecureSkipTLSVerify"
-	caCertKey                = "caCert"
+	s3URLKey                     = "s3Url"
+	publicURLKey                 = "publicUrl"
+	kmsKeyIDKey                  = "kmsKeyId"
+	s3ForcePathStyleKey          = "s3ForcePathStyle"
+	bucketKey                    = "bucket"
+	signatureVersionKey          = "signatureVersion"
+	credentialProfileKey         = "profile"
+	serverSideEncryptionKey      = "serverSideEncryption"
+	customerEncryptionKeyFileKey = "customerEncryptionKeyFile"
+	insecureSkipTLSVerifyKey     = "insecureSkipTLSVerify"
+	caCertKey                    = "caCert"
 )
 
 type s3Interface interface {
@@ -61,13 +66,15 @@ type s3Interface interface {
 }
 
 type ObjectStore struct {
-	log                  logrus.FieldLogger
-	s3                   s3Interface
-	preSignS3            s3Interface
-	s3Uploader           *s3manager.Uploader
-	kmsKeyID             string
-	signatureVersion     string
-	serverSideEncryption string
+	log                       logrus.FieldLogger
+	s3                        s3Interface
+	preSignS3                 s3Interface
+	s3Uploader                *s3manager.Uploader
+	kmsKeyID                  string
+	signatureVersion          string
+	serverSideEncryption      string
+	customerEncryptionKeyFile string
+	customerEncryptionKey     []byte
 }
 
 func newObjectStore(logger logrus.FieldLogger) *ObjectStore {
@@ -98,15 +105,16 @@ func (o *ObjectStore) Init(config map[string]string) error {
 	}
 
 	var (
-		region                   = config[regionKey]
-		s3URL                    = config[s3URLKey]
-		publicURL                = config[publicURLKey]
-		kmsKeyID                 = config[kmsKeyIDKey]
-		s3ForcePathStyleVal      = config[s3ForcePathStyleKey]
-		signatureVersion         = config[signatureVersionKey]
-		credentialProfile        = config[credentialProfileKey]
-		serverSideEncryption     = config[serverSideEncryptionKey]
-		insecureSkipTLSVerifyVal = config[insecureSkipTLSVerifyKey]
+		region                    = config[regionKey]
+		s3URL                     = config[s3URLKey]
+		publicURL                 = config[publicURLKey]
+		kmsKeyID                  = config[kmsKeyIDKey]
+		s3ForcePathStyleVal       = config[s3ForcePathStyleKey]
+		signatureVersion          = config[signatureVersionKey]
+		credentialProfile         = config[credentialProfileKey]
+		serverSideEncryption      = config[serverSideEncryptionKey]
+		customerEncryptionKeyFile = config[customerEncryptionKeyFileKey]
+		insecureSkipTLSVerifyVal  = config[insecureSkipTLSVerifyKey]
 
 		// note that bucket is automatically added to the config map
 		// by the server from the ObjectStorageProviderConfig so
@@ -205,6 +213,17 @@ func (o *ObjectStore) Init(config map[string]string) error {
 		o.preSignS3 = o.s3
 	}
 
+	if customerEncryptionKeyFile != "" {
+		dat, err := ioutil.ReadFile(customerEncryptionKeyFile)
+		if err != nil {
+			return err
+		}
+		o.customerEncryptionKey, err = base64.StdEncoding.DecodeString(string(dat))
+		if err != nil {
+			return fmt.Errorf("Failed to decode sse_customer_key: %s", err.Error())
+		}
+	}
+
 	return nil
 }
 
@@ -247,6 +266,10 @@ func (o *ObjectStore) PutObject(bucket, key string, body io.Reader) error {
 	case o.kmsKeyID != "":
 		req.ServerSideEncryption = aws.String("aws:kms")
 		req.SSEKMSKeyId = &o.kmsKeyID
+	case o.serverSideEncryption != "" && o.customerEncryptionKey != nil:
+		req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
+		req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
+		req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
 	// otherwise, use the SSE algorithm specified, if any
 	case o.serverSideEncryption != "":
 		req.ServerSideEncryption = aws.String(o.serverSideEncryption)
@@ -255,6 +278,11 @@ func (o *ObjectStore) PutObject(bucket, key string, body io.Reader) error {
 	_, err := o.s3Uploader.Upload(req)
 
 	return errors.Wrapf(err, "error putting object %s", key)
+}
+
+func (o *ObjectStore) getSSECustomerKeyMD5() string {
+	b := md5.Sum(o.customerEncryptionKey)
+	return base64.StdEncoding.EncodeToString(b[:])
 }
 
 const notFoundCode = "NotFound"
@@ -303,6 +331,12 @@ func (o *ObjectStore) GetObject(bucket, key string) (io.ReadCloser, error) {
 	req := &s3.GetObjectInput{
 		Bucket: &bucket,
 		Key:    &key,
+	}
+
+	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
+		req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
+		req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
+		req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
 	}
 
 	res, err := o.s3.GetObject(req)
