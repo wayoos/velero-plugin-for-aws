@@ -263,10 +263,10 @@ func (s *ObjectStoreGRPCServer) CreateSignedURL(ctx context.Context, req *proto.
 		return nil, newGRPCError(err)
 	}
 
-	url, err := impl.CreateSignedURL(req.Bucket, req.Key, time.Duration(req.Ttl))
+	url, headers, err := impl.CreateSignedURL(req.Bucket, req.Key, time.Duration(req.Ttl))
 	if err != nil {
-		return nil, newGRPCError(err)
+		return nil, nil, newGRPCError(err)
 	}
 
-	return &proto.CreateSignedURLResponse{Url: url}, nil
+	return &proto.CreateSignedURLResponse{Url: url, Headers: headers}, nil
 }
