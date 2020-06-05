@@ -61,5 +61,5 @@ type ObjectStore interface {
 	DeleteObject(bucket, key string) error
 
 	// CreateSignedURL creates a pre-signed URL for the given bucket and key that expires after ttl.
-	CreateSignedURL(bucket, key string, ttl time.Duration) (string, error)
+	CreateSignedURL(bucket, key string, ttl time.Duration) (url string, headers map[string]string, err error)
 }
