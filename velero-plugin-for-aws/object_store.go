@@ -422,10 +422,9 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 	headers := map[string]string(nil)
 	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
 		headers := make(map[string]string)
-		headers["pi"] = "3.14"
-		// req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
-		// req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
-		// req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
+		headers["x-amz-server-side​-encryption​-customer-algorithm"] = o.serverSideEncryption
+		headers["x-amz-server-side​-encryption​-customer-key"] = string(o.customerEncryptionKey)
+		headers["x-amz-server-side​-encryption​-customer-key-MD5"] = o.getSSECustomerKeyMD5()
 	}
 
 	url, err := req.Presign(ttl)
