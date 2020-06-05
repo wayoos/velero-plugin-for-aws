@@ -203,7 +203,7 @@ func (c *ObjectStoreGRPCClient) DeleteObject(bucket, key string) error {
 }
 
 // CreateSignedURL creates a pre-signed URL for the given bucket and key that expires after ttl.
-func (c *ObjectStoreGRPCClient) CreateSignedURL(bucket, key string, ttl time.Duration) (string, error) {
+func (c *ObjectStoreGRPCClient) CreateSignedURL(bucket, key string, ttl time.Duration) (string, map[string]string, error) {
 	req := &proto.CreateSignedURLRequest{
 		Plugin: c.plugin,
 		Bucket: bucket,
@@ -213,8 +213,8 @@ func (c *ObjectStoreGRPCClient) CreateSignedURL(bucket, key string, ttl time.Dur
 
 	res, err := c.grpcClient.CreateSignedURL(context.Background(), req)
 	if err != nil {
-		return "", fromGRPCError(err)
+		return "", nil, fromGRPCError(err)
 	}
 
-	return res.Url, nil
+	return res.Url, res.Headers, nil
 }
