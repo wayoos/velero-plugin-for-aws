@@ -330,7 +330,8 @@ func (m *CreateSignedURLRequest) GetTtl() int64 {
 }
 
 type CreateSignedURLResponse struct {
-	Url string `protobuf:"bytes,1,opt,name=url" json:"url,omitempty"`
+	Url     string            `protobuf:"bytes,1,opt,name=url" json:"url,omitempty"`
+	Headers map[string]string `protobuf:"bytes,2,rep,name=headers" json:"headers,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 }
 
 func (m *CreateSignedURLResponse) Reset()                    { *m = CreateSignedURLResponse{} }
@@ -343,6 +344,13 @@ func (m *CreateSignedURLResponse) GetUrl() string {
 		return m.Url
 	}
 	return ""
+}
+
+func (m *CreateSignedURLResponse) GetHeaders() map[string]string {
+	if m != nil {
+		return m.Headers
+	}
+	return nil
 }
 
 type ObjectStoreInitRequest struct {
