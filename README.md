@@ -322,3 +322,9 @@ Copy one of the returned IDs `<ID>` and use it with the `aws` CLI tool to search
 [9]: https://velero.io/docs/customize-installation/
 [10]: http://docs.aws.amazon.com/IAM/latest/UserGuide/introduction.html
 [11]: https://velero.io/docs/faq/
+
+
+# SSE-C
+
+https://aws.amazon.com/blogs/developer/generate-an-amazon-s3-presigned-url-with-sse-using-the-aws-sdk-for-c/
+https://stackoverflow.com/questions/57317626/golang-get-request-for-presigned-url-of-s3-object-with-sse-fails-with-403-error

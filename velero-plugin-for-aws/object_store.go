@@ -405,7 +405,7 @@ func (o *ObjectStore) DeleteObject(bucket, key string) error {
 	return errors.Wrapf(err, "error deleting object %s", key)
 }
 
-func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (string, error) {
+func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (string, map[string]string, error) {
 	req, _ := o.preSignS3.GetObjectRequest(&s3.GetObjectInput{
 		Bucket:               aws.String(bucket),
 		Key:                  aws.String(key),
@@ -419,11 +419,16 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 		req.Handlers.Sign.PushBackNamed(v1SignRequestHandler)
 	}
 
-	// if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
-	// 	req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
-	// 	req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
-	// 	req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
-	// }
+	headers := map[string]string(nil)
+	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
+		headers := make(map[string]string)
+		headers["pi"] = "3.14"
+		// req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
+		// req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
+		// req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
+	}
 
-	return req.Presign(ttl)
+	url, err := req.Presign(ttl)
+
+	return url, headers, err
 }
