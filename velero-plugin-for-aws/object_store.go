@@ -407,9 +407,9 @@ func (o *ObjectStore) DeleteObject(bucket, key string) error {
 
 func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (string, map[string]string, error) {
 	req, _ := o.preSignS3.GetObjectRequest(&s3.GetObjectInput{
-		Bucket:               aws.String(bucket),
-		Key:                  aws.String(key),
-		SSECustomerAlgorithm: aws.String(o.serverSideEncryption),
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		//		SSECustomerAlgorithm: aws.String(o.serverSideEncryption),
 		// SSECustomerKey:       aws.String(string(o.customerEncryptionKey)),
 		// SSECustomerKeyMD5:    aws.String(o.getSSECustomerKeyMD5()),
 	})
