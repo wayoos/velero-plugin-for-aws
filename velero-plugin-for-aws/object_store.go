@@ -410,8 +410,8 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 		Bucket:               aws.String(bucket),
 		Key:                  aws.String(key),
 		SSECustomerAlgorithm: aws.String(o.serverSideEncryption),
-		SSECustomerKey:       aws.String(string(o.customerEncryptionKey)),
-		SSECustomerKeyMD5:    aws.String(o.getSSECustomerKeyMD5()),
+		// SSECustomerKey:       aws.String(string(o.customerEncryptionKey)),
+		// SSECustomerKeyMD5:    aws.String(o.getSSECustomerKeyMD5()),
 	})
 
 	if o.signatureVersion == "1" {
