@@ -417,11 +417,11 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 	log.Info("Start CreateSignedURL")
 
 	req, _ := o.preSignS3.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		//		SSECustomerAlgorithm: aws.String(o.serverSideEncryption),
-		// SSECustomerKey:       aws.String(string(o.customerEncryptionKey)),
-		// SSECustomerKeyMD5:    aws.String(o.getSSECustomerKeyMD5()),
+		Bucket:               aws.String(bucket),
+		Key:                  aws.String(key),
+		SSECustomerAlgorithm: aws.String(o.serverSideEncryption),
+		SSECustomerKey:       aws.String(o.customerEncryptionKeyB64),
+		SSECustomerKeyMD5:    aws.String(o.getSSECustomerKeyMD5()),
 	})
 
 	if o.signatureVersion == "1" {
