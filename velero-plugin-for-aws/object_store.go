@@ -66,14 +66,15 @@ type s3Interface interface {
 }
 
 type ObjectStore struct {
-	log                   logrus.FieldLogger
-	s3                    s3Interface
-	preSignS3             s3Interface
-	s3Uploader            *s3manager.Uploader
-	kmsKeyID              string
-	signatureVersion      string
-	serverSideEncryption  string
-	customerEncryptionKey []byte
+	log                      logrus.FieldLogger
+	s3                       s3Interface
+	preSignS3                s3Interface
+	s3Uploader               *s3manager.Uploader
+	kmsKeyID                 string
+	signatureVersion         string
+	serverSideEncryption     string
+	customerEncryptionKeyB64 string
+	customerEncryptionKey    []byte
 }
 
 func newObjectStore(logger logrus.FieldLogger) *ObjectStore {
@@ -218,6 +219,7 @@ func (o *ObjectStore) Init(config map[string]string) error {
 		if err != nil {
 			return err
 		}
+		o.customerEncryptionKeyB64 = string(dat)
 		o.customerEncryptionKey, err = base64.StdEncoding.DecodeString(string(dat))
 		if err != nil {
 			return fmt.Errorf("Failed to decode sse_customer_key: %s", err.Error())
@@ -431,7 +433,7 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
 		headers = make(map[string]string)
 		headers["x-amz-server-side​-encryption​-customer-algorithm"] = o.serverSideEncryption
-		headers["x-amz-server-side​-encryption​-customer-key"] = string(o.customerEncryptionKey)
+		headers["x-amz-server-side-encryption-customer-key"] = o.customerEncryptionKeyB64
 		headers["x-amz-server-side​-encryption​-customer-key-MD5"] = o.getSSECustomerKeyMD5()
 
 		log.Info("CreateSignedURL add sse headers")
