@@ -432,9 +432,9 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 	headers := map[string]string(nil)
 	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
 		headers = make(map[string]string)
-		headers["x-amz-server-side​-encryption​-customer-algorithm"] = o.serverSideEncryption
+		headers["x-amz-server-side-encryption-customer-algorithm"] = o.serverSideEncryption
 		headers["x-amz-server-side-encryption-customer-key"] = o.customerEncryptionKeyB64
-		headers["x-amz-server-side​-encryption​-customer-key-MD5"] = o.getSSECustomerKeyMD5()
+		headers["x-amz-server-side-encryption-customer-key-MD5"] = o.getSSECustomerKeyMD5()
 
 		log.Info("CreateSignedURL add sse headers")
 
