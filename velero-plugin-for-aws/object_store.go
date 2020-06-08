@@ -406,6 +406,14 @@ func (o *ObjectStore) DeleteObject(bucket, key string) error {
 }
 
 func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (string, map[string]string, error) {
+	log := o.log.WithFields(
+		logrus.Fields{
+			"bucket": bucket,
+			"key":    key,
+		},
+	)
+	log.Info("Start CreateSignedURL")
+
 	req, _ := o.preSignS3.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -425,6 +433,9 @@ func (o *ObjectStore) CreateSignedURL(bucket, key string, ttl time.Duration) (st
 		headers["x-amz-server-side​-encryption​-customer-algorithm"] = o.serverSideEncryption
 		headers["x-amz-server-side​-encryption​-customer-key"] = string(o.customerEncryptionKey)
 		headers["x-amz-server-side​-encryption​-customer-key-MD5"] = o.getSSECustomerKeyMD5()
+
+		log.Info("CreateSignedURL add sse headers")
+
 	}
 
 	url, err := req.Presign(ttl)

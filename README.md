@@ -326,5 +326,6 @@ Copy one of the returned IDs `<ID>` and use it with the `aws` CLI tool to search
 
 # SSE-C
 
+https://aws.amazon.com/blogs/developer/generating-amazon-s3-pre-signed-urls-with-sse-c-part-5-finale/
 https://aws.amazon.com/blogs/developer/generate-an-amazon-s3-presigned-url-with-sse-using-the-aws-sdk-for-c/
 https://stackoverflow.com/questions/57317626/golang-get-request-for-presigned-url-of-s3-object-with-sse-fails-with-403-error
