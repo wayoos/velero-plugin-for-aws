@@ -303,6 +303,12 @@ func (o *ObjectStore) ObjectExists(bucket, key string) (bool, error) {
 		Key:    aws.String(key),
 	}
 
+	if o.serverSideEncryption != "" && o.customerEncryptionKey != nil {
+		req.SSECustomerAlgorithm = aws.String(o.serverSideEncryption)
+		req.SSECustomerKey = aws.String(string(o.customerEncryptionKey))
+		req.SSECustomerKeyMD5 = aws.String(o.getSSECustomerKeyMD5())
+	}
+
 	log.Debug("Checking if object exists")
 	if _, err := o.s3.HeadObject(req); err != nil {
 		log.Debug("Checking for AWS specific error information")
@@ -317,6 +323,7 @@ func (o *ObjectStore) ObjectExists(bucket, key string) (bool, error) {
 			// The code will be NotFound if the key doesn't exist.
 			// See https://github.com/aws/aws-sdk-go/issues/1208 and https://github.com/aws/aws-sdk-go/pull/1213.
 			log.Debugf("Checking for code=%s", notFoundCode)
+			log.Debugf("Current code=%s", aerr.Code())
 			if aerr.Code() == notFoundCode {
 				log.Debug("Object doesn't exist - got not found")
 				return false, nil
