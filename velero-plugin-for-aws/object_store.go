@@ -323,7 +323,6 @@ func (o *ObjectStore) ObjectExists(bucket, key string) (bool, error) {
 			// The code will be NotFound if the key doesn't exist.
 			// See https://github.com/aws/aws-sdk-go/issues/1208 and https://github.com/aws/aws-sdk-go/pull/1213.
 			log.Debugf("Checking for code=%s", notFoundCode)
-			log.Debugf("Current code=%s", aerr.Code())
 			if aerr.Code() == notFoundCode {
 				log.Debug("Object doesn't exist - got not found")
 				return false, nil
